@@ -11,9 +11,22 @@
     <title>노드 연습페이지</title>
   </head>
   <body>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
     <%- include('nav.html') %>
 <div class="container" id="list">
   <h4 class="ml-2 my-3 row"> ToDo <p class="text-success">&nbsp;List</p></h4>
+
+  <div class="input-group mb-2">
+    <input class="form-control" id="value" value="<%=value %>">
+    <button class="input-group-append btn btn-primary mx-1" id="search">검색</button>
+  </div>
+
+  <script>
+    $("#search").on("click",function(){
+      window.location.replace('/search?value='+$("#value").val());
+    })
+
+  </script>
         <ul class="list-group">
           <% for(let i=0; i < posts.length; i++){ %>
           <li class="list-group-item" style="cursor: pointer;" data-id="<%= posts[i]._id %>" onclick="detail(this)">
@@ -22,11 +35,11 @@
             <p>할일 마감날짜 : <%=posts[i].Date  %></p>
             <button class="btn btn-danger mb-3" data-id="<%= posts[i]._id %>" onclick="deleteList(event, this);">삭제</button>
             <button class="btn btn-primary mb-3" data-id="<%= posts[i]._id %>" onclick="editList(event, this);">수정</button>
+            <button class="btn btn-secondary mb-3" data-id="<%= posts[i].writer %>" onclick="createChat(event, this);">채팅방 개설</button>
           </li>
           <% } %>
         </ul>
 </div>
-<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js"></script>
 <script>
   function deleteList(event,target){
     event.stopPropagation();
@@ -50,6 +63,18 @@
     location.href='/edit/'+$(target).data("id");
 
   }
+function createChat(event, target){
+  event.stopPropagation();
+  $.ajax({
+      method : 'POST',
+      url : '/chatroom',
+      data : {writer : $(target).data("id")}
+    }).done(function(result){
+    }).fail(function(a,b,c) {
+      console.log(a,b,c);
+    })
+}
+
 </script>
 
 
