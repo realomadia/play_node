@@ -20,7 +20,7 @@
           <div class="col-3">
             <ul class="list-group chat-list">
                 <% for(let i=0; i < data.length; i++){ %>
-              <li class="list-group-item" data-id="">
+              <li class="list-group-item" data-id="<%=data[i]._id %>">
                 <h6><%= data[i].title %></h6>
                 <h6 class="text-small"><%= data[i].member[0] %></h6>
               </li>
@@ -31,9 +31,6 @@
            <div class="col-9 p-0">
              <div class="chat-room">
                 <ul class="list-group chat-content">
-                  <li><span class="chat-box">채팅방1 내용</span></li>
-                  <li><span class="chat-box">채팅방1 내용</span></li>
-                  <li><span class="chat-box mine">채팅방1 내용</span></li>
                 </ul>
               <div class="input-group">
                 <input class="form-control" id="chat-input">
@@ -46,5 +43,30 @@
       </div> 
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-Fy6S3B9q64WdZWQUiU+q4/2Lc9npb8tCaSX9FK7E8HnRr0Jz8D6OP9dO5Vg3Q9ct" crossorigin="anonymous"></script>
+    <script>
+    var clickId;
+    var eventSource; 
+    $('.list-group-item').click(function(){
+      clickId = this.dataset.id;
+      $('.chat-content').html('');
+      if(eventSource != undefined) {
+        eventSource.close();
+      }
+      eventSource = new EventSource('/message/' + clickId);
+      eventSource.addEventListener('test', function (e){
+        var takeOut = JSON.parse(e.data);
+        takeOut.forEach((a) => {
+            $('.chat-content').append(`<li><span class="chat-box">${a.content}</span></li>`)
+        });
+      });
+    });
+      $('#send').on("click", function() {
+        let chatInfo = {content : $("#chat-input").val(),
+                        parent : clickId}
+        $.post('/message', chatInfo).then(()=> {
+          console.log("전송 성공");
+        })
+      })
+    </script>
   </body>
 </html>

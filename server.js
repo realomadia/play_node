@@ -256,4 +256,47 @@ app.get("/chat", 로그인했니,(request, response)=> {
     })
 });
 
+app.post("/message", (request, response) => {
 
+    let chatData = {
+        parent : request.body.parent,
+        content : request.body.content,
+        uderid : request.user._id,
+        date : new Date()
+    }
+    console.log(chatData);
+        db.collection('message').insertOne(chatData ,(error, result) => {
+        console.log("DB 저장 성공");
+        response.send("DB저장 성공"); 
+    })
+
+})
+
+app.get('/message/:parentid', 로그인했니, function(request, response){
+
+    response.writeHead(200, {
+      "Connection": "keep-alive",
+      "Content-Type": "text/event-stream",
+      "Cache-Control": "no-cache",
+    });
+  
+    db.collection('message').find({ parent: request.params.parentid }).toArray()
+    .then((result)=>{
+      console.log(result);
+      response.write('event: test\n');
+      response.write(`data: ${JSON.stringify(result)}\n\n`);
+    });
+  
+  
+    const findDocu = [
+      { $match: { 'fullDocument.parent': request.params.parentid } }
+    ];
+  
+    const changeStream = db.collection('message').watch(findDocu);
+    changeStream.on('change', result => {
+      var addDocu = [result.fullDocument];
+      console.log(addDocu);
+      response.write(`data: ${JSON.stringify(addDocu)}\n\n`);
+    });
+  
+  });
