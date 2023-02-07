@@ -53,7 +53,7 @@
         eventSource.close();
       }
       eventSource = new EventSource('/message/' + clickId);
-      eventSource.addEventListener('test', function (e){
+      eventSource.addEventListener('test', function(e) {
         var takeOut = JSON.parse(e.data);
         takeOut.forEach((a) => {
             $('.chat-content').append(`<li><span class="chat-box">${a.content}</span></li>`)

@@ -10,6 +10,10 @@ app.use('/public', express.static('public'));
 const methodOverride = require('method-override');
 app.use(methodOverride('_method'));
 
+const http = require('http').createServer(app);
+const {Server} = require('socket.io');
+const io = new Server(http);
+
 let db;
 MongoClient.connect(process.env.DB_URL, (error, client) => {
     
@@ -17,11 +21,14 @@ MongoClient.connect(process.env.DB_URL, (error, client) => {
 
     db = client.db('nodepractice');
 
-    app.listen(process.env.PORT, () => {
+    http.listen(process.env.PORT, () => {
         console.log('listening on 8081');
+        //express 쓸때 웹소켓 오픈 가능
     });
 
-
+    // app.listen(process.env.PORT, () => {
+    //     console.log('listening on 8081');
+    // }); 서버 띄우는 코드 쌩 node.js를 쓸때
 
 });
 
@@ -256,21 +263,7 @@ app.get("/chat", 로그인했니,(request, response)=> {
     })
 });
 
-app.post("/message", (request, response) => {
 
-    let chatData = {
-        parent : request.body.parent,
-        content : request.body.content,
-        uderid : request.user._id,
-        date : new Date()
-    }
-    console.log(chatData);
-        db.collection('message').insertOne(chatData ,(error, result) => {
-        console.log("DB 저장 성공");
-        response.send("DB저장 성공"); 
-    })
-
-})
 
 app.get('/message/:parentid', 로그인했니, function(request, response){
 
@@ -294,9 +287,46 @@ app.get('/message/:parentid', 로그인했니, function(request, response){
   
     const changeStream = db.collection('message').watch(findDocu);
     changeStream.on('change', result => {
+    console.log("체인지 스트림 변경확인")
       var addDocu = [result.fullDocument];
-      console.log(addDocu);
+      response.write('event: test\n');
       response.write(`data: ${JSON.stringify(addDocu)}\n\n`);
     });
   
   });
+
+  app.post("/message", (request, response) => {
+
+    let chatData = {
+        parent : request.body.parent,
+        content : request.body.content,
+        uderid : request.user._id,
+        date : new Date()
+    }
+        db.collection('message').insertOne(chatData ,(error, result) => {
+        console.log("DB 저장 성공");
+        response.send("send까지");
+    })
+
+})
+app.get("/socket", (request, response) => {
+    response.render("socket.ejs");    
+});
+
+io.on('connection',(socket)=>{
+
+    socket.on("joinroom1", function(data){
+        socket.join('room1');
+    })
+
+    socket.on("room1-send",function(data){
+        io.to("room1").emit('broadcast',data);
+    })
+
+    socket.on("user-send", function(data) {
+        // io.to(socket.id).emit("broadcast", data);
+        io.emit('broadcast', data);
+    })
+});
+
+
